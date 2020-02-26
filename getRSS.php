@@ -1,24 +1,27 @@
 <?php
 date_default_timezone_set("America/Chicago");
-header("Content-Type: application/rss+xml; charset=ISO-8859-1");
 
 $theXML = "";
 $filename = "";
 if (isset($_GET["channel"])) {
     $channel = $_GET["channel"];
-    $json_a = json_decode(GetChannelVideos($channel, 0, 200), true)["data"]["getChannel"]["videos"];
+    $fetch = 150;
+    $json_a = json_decode(GetChannelVideos($channel, 0, $fetch), true)["data"]["getChannel"]["videos"];
     if (count($json_a) > 0) {
         $filename = "channel.rss";
-        $theXML = processXML($json_a, 0, 200,"channel.rss", false);
+        $theXML = processXML($json_a, 0, $fetch,"channel.rss", false);
     }
 } else {
-    $json_a = json_decode(GetLatestVideos(0, 200), true)["data"]["getNewVideos"];
+    $fetch = 150;
+    $json_a = json_decode(GetLatestVideos(0, $fetch), true)["data"]["getNewVideos"];
     if (count($json_a) > 0) {
         $filename = "latest.rss";
-        $theXML = processXML($json_a, 0, 200,"latest.rss", true);
+        $theXML = processXML($json_a, 0, $fetch,"latest.rss", true);
     }
 }
 
+//Respond with RSS - XML
+header("Content-Type: application/rss+xml; charset=ISO-8859-1");
 header("Content-Disposition: attachment; filename=" . $filename . "");
 echo $theXML;
 
@@ -49,68 +52,37 @@ function processXML($videos, $start, $end, $filename, $latest)
         $theXML = $xml->saveXML();
         $xpath = new DOMXPath($xml);
 
-        // TODO: There's probably a better way to write this than using a loop, but it's all I could figure out
-        $search = "";
-        $latestTitle = "Latest Videos";
+        //Create channel
+        $channel = $xml->createElement('channel');
+        $channel = $rss_node->appendChild($channel);
         if ($latest) {
-            $search = $latestTitle;
+            $title = "Latest Videos";
+            $description = "Because there is a war on for your mind!";
+            $link = "https://banned.video";
+            $imageurl = "https://assets.infowarsmedia.com/images/9a211cdf-bdbf-443f-83d6-333a5f02e104-large.jpg";
         } else {
-            $search = htmlspecialchars($videos[$i]["channel"]["title"]);
+            $title = htmlspecialchars($videos[$i]["channel"]["title"]);
+            $description = htmlspecialchars($videos[$i]["channel"]["title"]);
+            $link = "https://banned.video/channel/" . $videos[$i]["channel"]["_id"];
+            $imageurl = $videos[$i]["channel"]["avatar"];
         }
 
-        $query = "//channel[title='" . $search . "']";
-        $elements = $xpath->query($query);
-        $found = false;
-        $thischannel = null;
-        foreach ($elements as $channel) {
-            $found = true;
-            $thischannel = $channel;
-            break;
-            // echo $title->nodeValue, "\n";
-        }
-        //TODO: END CODE REFACTOR OPPORTUNITY
+        $channel_title = $channel->appendChild($xml->createElement('title', $title));
+        $channel_title = $channel->appendChild($xml->createElement('description', $description));
+        $channel_link = $channel->appendChild($xml->createElement('link', $link));
+        $xml->saveXML();
+            $image = $channel->appendChild($xml->createElement('image'));
+            $imgurl = $image->appendChild($xml->createElement('title', $title));        
+            $imgurl = $image->appendChild($xml->createElement('url', $imageurl));
+            $imglink = $image->appendChild($xml->createElement('link', $link));
+        $xml->saveXML();
 
-        if ($found) {
-            //Add video to channel
-            $xml = addVideoToChannel($thischannel, $xml,  $videos[$i]);
-       } else {
-            //Create channel
-            $channel = $xml->createElement('channel');
-            $channel = $rss_node->appendChild($channel);
-            if ($latest) {
-                $title = $latestTitle;
-                $description = "Because there is a war on for your mind!";
-                $link = "https://banned.video";
-                $imageurl = "https://assets.infowarsmedia.com/images/9a211cdf-bdbf-443f-83d6-333a5f02e104-large.jpg";
-            } else {
-                $title = htmlspecialchars($videos[$i]["channel"]["title"]);
-                $description = htmlspecialchars($videos[$i]["channel"]["title"]);
-                $link = "https://banned.video/channel/" . $videos[$i]["channel"]["_id"];
-                $imageurl = $videos[$i]["channel"]["avatar"];
-            }
-
-            $channel_title = $channel->appendChild($xml->createElement('title', $title));
-            $channel_title = $channel->appendChild($xml->createElement('description', $description));
-            $channel_link = $channel->appendChild($xml->createElement('link', $link));
-            $xml->saveXML();
-                $image = $channel->appendChild($xml->createElement('image'));
-                $imgurl = $image->appendChild($xml->createElement('title', $latestTitle));        
-                $imgurl = $image->appendChild($xml->createElement('url', $imageurl));
-                $imglink = $image->appendChild($xml->createElement('link', $link));
-            $xml->saveXML();
-
-            //Add video to it
-            $xml = addVideoToChannel($channel, $xml, $videos[$i]);
-        }
+        //Add video to it
+        $xml = addVideoToChannel($channel, $xml, $videos[$i]);
     }
 
     $theXML = $xml->saveXML();
-    
-    // // Save the contents to a file (you could alternatively return them in response!)
-    // $file = fopen($filename, "w");
-    // fwrite($file, $theXML);
-    // fclose($file);
-    
+
     return $theXML;
 }
 
@@ -263,7 +235,5 @@ function httpPost($url,$params)
     curl_close($ch);
     return $output;
 }
-
-
 
 ?>
