@@ -1,11 +1,12 @@
 # Banned.Video2RSS
-A PHP script which renders an RSS feed from Banned.Video for all the latest videos. Allows you to optionally select by channel.
+A PHP script which renders an RSS 2.0 feed from Banned.Video for all the latest videos. Allows you to optionally select by channel.
 
 This is a simple PHP script which interfaces with the Banned.Video api and is useful for generating your own RSS feed from the latest videos or videos by channel. 
 The result is a URL (this PHP file on your server) which can be added to an RSS Reader like Feedly to produce a full featured RSS Video Podcast like user experience on any mobile or desktop device.
-Usage:
-No parameters: will return latest.rss
-**channel** parameter should be the channel id, shown from the list below. Only one channel ID is allowed at a time.
+
+### Usage:
+* No parameters: will return the latest videos as "latest.rss"
+* **channel** parameter should be the channel id shown from the list below. Only one channel ID is allowed at a time. This will return a file called "channel.rss"
 
 Channel IDs for your reference:
 
