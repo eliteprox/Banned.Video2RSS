@@ -5,8 +5,9 @@ This is a simple PHP script which interfaces with the Banned.Video api and is us
 The result is a URL (this PHP file on your server) which can be added to an RSS Reader like Feedly to produce a full featured RSS Video Podcast like user experience on any mobile or desktop device.
 
 ### Usage:
-* No parameters: will return the latest videos as "latest.rss"
+* No parameters will return the latest videos as "latest.rss"
 * **channel** parameter should be the channel id shown from the list below. Only one channel ID is allowed at a time. This will return a file called "channel.rss"
+Example getRSS.php?channel=5b885d33e6646a0015a6fa2d
 
 Channel IDs for your reference:
 
